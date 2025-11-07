@@ -15,51 +15,54 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.SocialPlatforms.Impl;
+
 
 public class GameManager : MonoBehaviour
 {
-   public static GameManager Instance;// 싱글톤 인스턴스
-    public PlayerStatus playerStatus;
-    public int score;
+    [SerializeField] PlayerStatus playerStatus;
+    public event System.Action<int> OnScoreChanged;
 
-    private void Awake()
+    private int score;
+    public int Score
     {
-        if (Instance == null)
+        get { return score; }
+        set
         {
-            Instance = this;
-            DontDestroyOnLoad(gameObject); // 씬 전환 시에도 파괴되지 않음
+            score = value;
+            OnScoreChanged?.Invoke(score);
         }
-        else Destroy(gameObject);
     }
 
     void Start()
     {
-        playerStatus.OnPlayerDead += GameOver; // 플레이어 사망 이벤트
-    }
-
-    void GameOver() // 플레이어 사망 처리
-    {
-        playerStatus.currentHP -= 1;
-
-        if (playerStatus.currentHP > 0)
+        // PlayerStatus 이벤트 구독
+        if (playerStatus != null)
         {
-            RespawnPlayer();// 플레이어 리스폰 
+            playerStatus.OnHPChanged += HandleHPChanged;
+            playerStatus.OnDeath += HandlePlayerDeath;
         }
-        else
-        {
-            SceneManager.LoadScene("GameOver"); // 게임오버 처리
-        }
+
+        // UIManager 이벤트 구독
+        UIManager uiManager = FindObjectOfType<UIManager>();
+
+
     }
 
-    void RespawnPlayer() // 플레이어 리스폰 로직
+    void HandleHPChanged(int newHP)
     {
-        // 예시: 현재 씬 다시 불러오기
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        Debug.Log($"Player HP: {newHP}");
     }
 
-    public void AddScore(int value)
+    void HandlePlayerDeath()
     {
-        score += value; // UIManager에게도 점수 변경 알려주기 가능
-        
+        Debug.Log("Player Dead → Game Over!");
+        // 게임 오버 처리 로직
     }
+
+        // 기존 코드
+
+    // 점수 변수와 Score 프로퍼티 추가
+   
+
 }

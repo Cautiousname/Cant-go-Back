@@ -1,9 +1,8 @@
 // ============================================
 // [IngameUI.cs]
-// Role : 게임 플래이 UI 관리
-//       **PlayerController 직접 참조 하지X**
+// Role : 게임 플레이 UI 관리
 // Input : PlayerStatus (상태 정보)
-// Output : UI (체력바, 사망 화면 등)
+// Output : UI (체력바, 점수, 사망 화면 등)
 // Event : OnHealthChanged, OnPlayerDead
 // ============================================
 
@@ -12,35 +11,70 @@ using UnityEngine.UI;
 
 public class IngameUI : MonoBehaviour
 {
+    [Header("UI Components")]
     [SerializeField] private Slider hpBar;
     [SerializeField] private Text scoreText;
+    [SerializeField] private GameObject gameOverPanel;
 
     private PlayerStatus playerStatus;
     private GameManager gameManager;
-    void Start()
-    {
-        gameManager = GameManager.Instance;
-        playerStatus = gameManager.playerStatus;
 
-        playerStatus.OnHealthChanged += UpdateHPBar; //체력 변경 이벤트 구독
-        UpdateHPBar(playerStatus.currentHP, playerStatus.maxHP);
-        playerStatus.OnPlayerDead += PlayerDead; //사망 이벤트 구독
-        UpdateScore(gameManager.score);
+    private void Start()
+    {
+        // 싱글톤이나 Find로 참조 (상황에 따라 DI로 대체 가능)
+        playerStatus = FindObjectOfType<PlayerStatus>();
+        gameManager = FindObjectOfType<GameManager>();
+
+        // PlayerStatus 이벤트 구독
+        if (playerStatus != null)
+        {
+            playerStatus.OnHPChanged += UpdateHPBar;
+            playerStatus.OnDeath += ShowGameOverScreen;
+        }
+
+        // GameManager 이벤트 구독 (예: 점수 갱신)
+        if (gameManager != null)
+        {
+            gameManager.OnScoreChanged += UpdateScoreText;
+        }
+
+        // 초기값 설정
+        UpdateHPBar(playerStatus.CurrentHP);
+        UpdateScoreText(gameManager.Score);
     }
 
-    void UpdateHPBar(int current, int max) //체력바 업데이트
+    private void OnDestroy()
     {
-        hpBar.value = (float)current / max;
+        // 이벤트 구독 해제 (메모리 릭 방지)
+        if (playerStatus != null)
+        {
+            playerStatus.OnHPChanged -= UpdateHPBar;
+            playerStatus.OnDeath -= ShowGameOverScreen;
+        }
+
+        if (gameManager != null)
+        {
+            gameManager.OnScoreChanged -= UpdateScoreText;
+        }
     }
 
-    public void UpdateScore(int score)//점수 업데이트
+    // Overload for Action<int> delegate
+    public void UpdateHPBar(int currentHP)
     {
-        scoreText.text = $"Score: {score}";
+        if (hpBar != null && playerStatus != null)
+            hpBar.value = (float)currentHP / playerStatus.MaxHP;
     }
 
-    private void PlayerDead()
+    public void UpdateScoreText(int score)
     {
-        // 플레이어 사망 처리 로직
-        Debug.Log("플레이어가 사망했습니다.");
+        if (scoreText != null)
+            scoreText.text = $"Score: {score}";
     }
+
+    public void ShowGameOverScreen()
+    {
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(true);
+    }
+
 }
