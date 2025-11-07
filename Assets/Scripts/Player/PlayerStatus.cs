@@ -21,6 +21,7 @@ public class PlayerStatus : MonoBehaviour
     public int CurrentHP => HP; public int MaxHP => 100;
     public int HP { get; private set; } = 100;
     public bool IsDead => HP <= 0; public bool isDead;
+    public int Score { get; set; } = 0;
     
 
     // 이벤트 선언 (GameManager가 구독할 수 있음)
