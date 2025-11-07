@@ -20,7 +20,7 @@ using System.Collections.Generic;
 
 public class PlayerController : MonoBehaviour
 {
-    bool inputRight = false; bool inputLeft = false; InputManager inputManager;
+    bool inputRight = false; bool inputLeft = false; 
     //이동 방향 어느쪽인지
     public float jumpPower = 45; bool inputJump = false;
 
@@ -28,6 +28,7 @@ public class PlayerController : MonoBehaviour
 
     Rigidbody2D rigid2D;
     PlayerStatus status;
+    InputManager inputManager;
     //각종 컴포넌트 선언
     void Start()
     {
@@ -38,60 +39,47 @@ public class PlayerController : MonoBehaviour
         //각종 컴포넌트 받아오기
     }
 
-    public void Jump()
+    void Update()
     {
-        if (status.isGrounded == true && !status.isJumping == false)
-        {
-            rigid2D.AddForce(Vector2.up * jumpPower, ForceMode2D.Impulse);
-            status.isJumping = true;
-        } //점프 처리
+        MoveLeft();
+        MoveRight();
+        Jump();
+        Attack();
     }
 
-    public void MoveRight()
+    public void MoveRight()//오른쪽 처리
     {
-        if (status.isCursed == true)
-        {
-            inputLeft = false; //왼쪽이동 불가
+        inputRight = true;
+        inputLeft = false;
+    } 
+    public void MoveLeft()//왼쪽 처리
+    {
+        if (status.isCursed == true){
+            inputLeft = false;
+            inputRight = false;
         }
-        else
-        {
-            inputRight = true; //오른쪽이동 가능
-            if (inputRight == true)
-        {
-            Transform playerTransform = this.transform; //플레이어 트랜스폼 받아오기
-            if (playerTransform.localScale.x > 0)
-            {
-                Vector3 newScale = playerTransform.localScale;
-                newScale.x *= -1;
-                playerTransform.localScale = newScale;
-            } //오른쪽 이동 및 방향 전환
+        else{
+            inputLeft = true;
+            inputRight = false;
         }
 
-        }
-    }
-    public void MoveLeft()
+    } 
+    public void Jump()//점프 처리
     {
-        if (inputLeft == true)
-        {
-            Transform playerTransform = this.transform; //플레이어 트랜스폼 받아오기
-            if (playerTransform.localScale.x < 0)
-            {
-                Vector3 newScale = playerTransform.localScale;
-                newScale.x *= -1;
-                playerTransform.localScale = newScale;
-            } //왼쪽 이동 및 방향 전환
-        }
-    }
-    public void StopMoving()
-    {
-        inputRight = false; inputLeft = false;
-    } //이동 멈춤 처리
+        inputJump = true;
+    } 
 
-    public void Attack()
+    public void Attack()//공격 처리
     {
         if (!status.isAttacking)
         {
             status.isAttacking = true;
         }
-    } //공격 처리
+    } 
+    
+    public void StopMoving()//이동 멈춤 처리
+    {
+        inputRight = false;
+        inputLeft = false;
+    }
 }
